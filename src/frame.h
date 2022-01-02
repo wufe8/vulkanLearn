@@ -34,8 +34,23 @@ void printVkExtensionList();
 void printVkLayerList();
 //检查可用校验层
 bool checkValidationLayerSupport();
+/* TODO 输出物理设备
+* @param instance vulkan容器 */
+void printPhysicalDevices(VkInstance instance);
 //获取扩展
 std::vector<const char*> getRequiredExtensions();
+
+//队列簇序号存储及其有效性检查
+struct QueueFamilyIndices
+{
+	int graphicsFamily = -1;
+	bool isComplete()
+	{
+		return graphicsFamily >= 0;
+	}
+};
+//查找队列簇
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
 //代理函数 获取删除调试层回调管理的函数
 void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
@@ -45,10 +60,13 @@ void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create
 class Frame //主程序类
 {
 public:
-	GLFWwindow* window = nullptr; //窗口定义
+	GLFWwindow* window = VK_NULL_HANDLE; //窗口定义
 	//GLFWwindow* subwindow;
-	VkInstance instance = {}; //handle
+	VkInstance instance = {}; //vulkan容器
 	VkDebugUtilsMessengerEXT debugMessenger = {}; //回调函数信息
+	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE; //物理设备
+	VkDevice device = VK_NULL_HANDLE; //逻辑设备
+	VkQueue graphicsQueue = VK_NULL_HANDLE;
 	void run()
 	{
 		initWindow(); //初始化窗口
@@ -75,10 +93,18 @@ private:
 	{
 		createInstance();
 		setupDebugMessenger();
+		pickPhysicalDevice();
+		createLogicalDevice();
 	}
 
+	//创建vulkan容器
 	void createInstance();
+	//设置校验层及其回调处理
 	void setupDebugMessenger();
+	//选取物理设备
+	void pickPhysicalDevice();
+	//创建逻辑设备
+	void createLogicalDevice();
 
 	virtual void mainLoop()
 	{
@@ -94,7 +120,8 @@ private:
 		{
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
-		vkDestroyInstance(instance, nullptr); //删除handle
+		vkDestroyDevice(device, nullptr); //删除逻辑设备
+		vkDestroyInstance(instance, nullptr); //删除vulkan容器
 		glfwDestroyWindow(window); //删除window窗口
 		glfwTerminate(); //删除所有剩余资源
 	}
