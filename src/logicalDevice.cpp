@@ -4,20 +4,28 @@
 void Frame::createLogicalDevice()
 {
 	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-	VkDeviceQueueCreateInfo queueCreateInfo = {};
-	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily;
-	queueCreateInfo.queueCount = 1;
+	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+	std::set<int> queueFamilies = { indices.graphicsFamily, indices.presentFamily };
 	const float queuePriorities = 1.0f; //队列优先级 取0.0f至1.0f
-	queueCreateInfo.pQueuePriorities = &queuePriorities; //const float*
+	//逐info写入不同队列簇(可能是同一个)
+	for (int queueFamily : queueFamilies)
+	{
+		VkDeviceQueueCreateInfo queueCreateInfo = {};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = queueFamily;
+		queueCreateInfo.queueCount = 1;
+		queueCreateInfo.pQueuePriorities = &queuePriorities; //const float*
+
+		queueCreateInfos.push_back(queueCreateInfo);
+	}
 
 	VkPhysicalDeviceFeatures deviceFeatures = {};
 	vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
 	
 	VkDeviceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-	createInfo.pQueueCreateInfos = &queueCreateInfo;
-	createInfo.queueCreateInfoCount = queueCreateInfo.queueCount;
+	createInfo.pQueueCreateInfos = queueCreateInfos.data();
+	createInfo.queueCreateInfoCount = int(queueCreateInfos.size());
 	createInfo.pEnabledFeatures = &deviceFeatures;
 	
 	createInfo.enabledExtensionCount = 0;
@@ -37,4 +45,5 @@ void Frame::createLogicalDevice()
 	}
 
 	vkGetDeviceQueue(device, indices.graphicsFamily, 0, &graphicsQueue);
+	vkGetDeviceQueue(device, indices.presentFamily, 0, &presentQueue);
 }

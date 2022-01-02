@@ -35,17 +35,17 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 		switch (messageSeverity)
 		{
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-			std::cerr << "\37\033[2m[V] " << pCallbackData->pMessage << "\033[0m" << std::endl;
-			break; //Verbose 灰色
+			std::cerr << "[V] " << pCallbackData->pMessage << std::endl;
+			break; //verbose
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-			std::cerr << "\37[I] " << pCallbackData->pMessage << "\033[0m" << std::endl;
-			break; //info 白色
+			std::cerr << "[I] " << pCallbackData->pMessage << std::endl;
+			break; //info
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-			std::cerr << "\33[W] " << pCallbackData->pMessage << "\033[0m" << std::endl;
-			break; //warning 黄色
+			std::cerr << "[W] " << pCallbackData->pMessage << std::endl;
+			break; //warning
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-			std::cerr << "\31[E] " << pCallbackData->pMessage << "\033[0m" << std::endl;
-			break; //error 红色
+			std::cerr << "[E] " << pCallbackData->pMessage << std::endl;
+			break; //error
 		}
 	}
 	return VK_FALSE;

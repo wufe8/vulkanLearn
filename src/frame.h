@@ -2,14 +2,18 @@
 #define FRAME_H
 #pragma once
 
+//#define VK_USE_PLATFORM_WIN32_KHR //使用windows平台原生功能
 #define GLFW_INCLUDE_VULKAN //声明glfw使用vulkan api
 #include <GLFW/glfw3.h> //glfw用于创建窗口
+//#define GLFW_EXPOSE_NATIVE_WIN32 //使用windows平台原生功能
+//#include <GLFW/glfw3native.h> //使用平台原生
 
 #include <iostream> //iostream用于控制台输出
 #include <stdexcept> //stdexcept支持多种错误类型的处理
 #include <functional> //functional用于资源管理
 #include <cstdlib> //cstdlib使用EXIT_SUCESS, EXIT_FAILURE宏
 #include <vector> //vector数据结构
+#include <set> //set数据结构
 
 const int WIDTH = 800; //定义长宽
 const int HEIGHT = 600;
@@ -44,13 +48,12 @@ std::vector<const char*> getRequiredExtensions();
 struct QueueFamilyIndices
 {
 	int graphicsFamily = -1;
+	int presentFamily  = -1;
 	bool isComplete()
 	{
-		return graphicsFamily >= 0;
+		return graphicsFamily >= 0 && presentFamily >= 0;
 	}
 };
-//查找队列簇
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
 //代理函数 获取删除调试层回调管理的函数
 void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
@@ -66,7 +69,9 @@ public:
 	VkDebugUtilsMessengerEXT debugMessenger = {}; //回调函数信息
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE; //物理设备
 	VkDevice device = VK_NULL_HANDLE; //逻辑设备
-	VkQueue graphicsQueue = VK_NULL_HANDLE;
+	VkQueue graphicsQueue = VK_NULL_HANDLE; //图像队列
+	VkQueue presentQueue = VK_NULL_HANDLE; //呈现队列
+	VkSurfaceKHR surface;
 	void run()
 	{
 		initWindow(); //初始化窗口
@@ -93,6 +98,7 @@ private:
 	{
 		createInstance();
 		setupDebugMessenger();
+		createSurface(); //表面应在选择物理设备前创建
 		pickPhysicalDevice();
 		createLogicalDevice();
 	}
@@ -101,11 +107,17 @@ private:
 	void createInstance();
 	//设置校验层及其回调处理
 	void setupDebugMessenger();
+	//创建窗口表面
+	void createSurface();
 	//选取物理设备
 	void pickPhysicalDevice();
 	//创建逻辑设备
 	void createLogicalDevice();
 
+	//确定GPU是否合适
+	bool isDeviceSuitable(VkPhysicalDevice device);
+	//寻找合适的队列簇
+	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 	virtual void mainLoop()
 	{
 		while (!glfwWindowShouldClose(window)) //循环直到点击关闭window窗口
@@ -121,6 +133,7 @@ private:
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
 		vkDestroyDevice(device, nullptr); //删除逻辑设备
+		vkDestroySurfaceKHR(instance, surface, nullptr); //删除表面对象
 		vkDestroyInstance(instance, nullptr); //删除vulkan容器
 		glfwDestroyWindow(window); //删除window窗口
 		glfwTerminate(); //删除所有剩余资源

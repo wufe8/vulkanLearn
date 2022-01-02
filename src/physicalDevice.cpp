@@ -1,10 +1,5 @@
 #include "frame.h"
 
-//确定GPU是否合适
-bool isDeviceSuitable(VkPhysicalDevice device);
-
-//寻找合适的队列簇
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
 //选取物理设备
 void Frame::pickPhysicalDevice()
@@ -42,13 +37,13 @@ void Frame::pickPhysicalDevice()
 	}
 }
 
-bool isDeviceSuitable(VkPhysicalDevice device)
+bool Frame::isDeviceSuitable(VkPhysicalDevice device)
 {
-	QueueFamilyIndices indices = findQueueFamilies(device); //需要支持图形指令
+	QueueFamilyIndices indices = findQueueFamilies(device);
 	return indices.isComplete();
 }
 
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
+QueueFamilyIndices Frame::findQueueFamilies(VkPhysicalDevice device)
 {
 	QueueFamilyIndices indices;
 	uint32_t queueFamilyCount = 0; //获取队列簇
@@ -58,10 +53,23 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
 	int i = 0;
 	for (const auto& queueFamily : queueFamilies)
 	{
-		if (queueFamily.queueCount > 0 &&
-			queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		if (queueFamily.queueCount > 0)
 		{
-			indices.graphicsFamily = i; //设定为找到的队列簇
+			//支持图形指令
+			if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+			{
+				indices.graphicsFamily = i; //设定为找到的队列簇
+			}
+			//可呈现图像到窗口表面
+			VkBool32 presentSupport = false;
+			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+			if (presentSupport)
+			{
+				indices.presentFamily = i;
+			}
+		}
+		if (indices.isComplete())
+		{
 			break;
 		}
 		i++;
