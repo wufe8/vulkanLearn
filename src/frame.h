@@ -14,6 +14,7 @@
 #include <cstdlib> //cstdlib使用EXIT_SUCESS, EXIT_FAILURE宏
 #include <vector> //vector数据结构
 #include <set> //set数据结构
+#include <algorithm> //数学运算比较
 
 const int WIDTH = 800; //定义长宽
 const int HEIGHT = 600;
@@ -32,17 +33,28 @@ const bool enableValidationLayers = true;
 const VkDebugUtilsMessageSeverityFlagBitsEXT DebugLevel =
 VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
 
+class Frame;
+
 //输出vulkan扩展列表
 void printVkExtensionList();
 //输出可用校验层列表
 void printVkLayerList();
-//检查可用校验层
-bool checkValidationLayerSupport();
 /* TODO 输出物理设备
 * @param instance vulkan容器 */
-void printPhysicalDevices(VkInstance instance);
-//获取扩展
-std::vector<const char*> getRequiredExtensions();
+void printPhysicalDevices(Frame* pFrame);
+//输出设备扩展列表
+void printDeviceExtensionList(Frame* pFrame);
+
+//检查可用校验层
+bool checkValidationLayerSupport();
+//检查交换链支持情况
+//bool querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
+
+
+//获取容器扩展
+std::vector<const char*> getRequiredInstanceExtensions();
+//获取设备扩展
+std::vector<const char*> getRequiredDeviceExtensions();
 
 //队列簇序号存储及其有效性检查
 struct QueueFamilyIndices
@@ -52,6 +64,20 @@ struct QueueFamilyIndices
 	bool isComplete()
 	{
 		return graphicsFamily >= 0 && presentFamily >= 0;
+	}
+};
+
+/*交换链支持细节
+* @manber
+*/
+struct SwapChainSupportDetails
+{
+	VkSurfaceCapabilitiesKHR capabilities;
+	std::vector<VkSurfaceFormatKHR> formats;
+	std::vector<VkPresentModeKHR> presentModes;
+	bool check()
+	{
+		return !formats.empty() && !presentModes.empty();
 	}
 };
 
@@ -71,11 +97,12 @@ public:
 	VkDevice device = VK_NULL_HANDLE; //逻辑设备
 	VkQueue graphicsQueue = VK_NULL_HANDLE; //图像队列
 	VkQueue presentQueue = VK_NULL_HANDLE; //呈现队列
-	VkSurfaceKHR surface;
+	VkSurfaceKHR surface = VK_NULL_HANDLE; //窗口表面抽象
 	void run()
 	{
 		initWindow(); //初始化窗口
 		initVulkan(); //初始化Vulkan
+		//printDebug(); //输出调试列表
 		mainLoop(); //渲染事件循环
 		cleanup(); //结束前清理资源
 	}
@@ -101,6 +128,7 @@ private:
 		createSurface(); //表面应在选择物理设备前创建
 		pickPhysicalDevice();
 		createLogicalDevice();
+		createSwapChain();
 	}
 
 	//创建vulkan容器
@@ -113,11 +141,18 @@ private:
 	void pickPhysicalDevice();
 	//创建逻辑设备
 	void createLogicalDevice();
+	//创建交换链
+	void createSwapChain();
 
 	//确定GPU是否合适
 	bool isDeviceSuitable(VkPhysicalDevice device);
 	//寻找合适的队列簇
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+	//获取设备的交换链支持情况
+	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+
+	//输出调试列表
+	void printDebug();
 	virtual void mainLoop()
 	{
 		while (!glfwWindowShouldClose(window)) //循环直到点击关闭window窗口

@@ -28,7 +28,10 @@ void Frame::createLogicalDevice()
 	createInfo.queueCreateInfoCount = int(queueCreateInfos.size());
 	createInfo.pEnabledFeatures = &deviceFeatures;
 	
-	createInfo.enabledExtensionCount = 0;
+	auto extensions = getRequiredDeviceExtensions();
+	createInfo.enabledExtensionCount = int(extensions.size());
+	createInfo.ppEnabledExtensionNames = extensions.data();
+
 	if (enableValidationLayers) //对设备使用校验层
 	{
 		createInfo.enabledLayerCount = int(validationLayers.size());
@@ -46,4 +49,12 @@ void Frame::createLogicalDevice()
 
 	vkGetDeviceQueue(device, indices.graphicsFamily, 0, &graphicsQueue);
 	vkGetDeviceQueue(device, indices.presentFamily, 0, &presentQueue);
+}
+
+//获取设备扩展
+std::vector<const char*> getRequiredDeviceExtensions()
+{
+	std::vector<const char*> extensions;
+	extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+	return extensions;
 }

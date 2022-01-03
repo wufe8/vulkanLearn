@@ -1,6 +1,14 @@
 #include "frame.h"
 
 
+const std::vector<const char*> deviceExtensions =
+{
+	VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
+
+//检查设备扩展支持
+bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+
 //选取物理设备
 void Frame::pickPhysicalDevice()
 {
@@ -39,12 +47,14 @@ void Frame::pickPhysicalDevice()
 
 bool Frame::isDeviceSuitable(VkPhysicalDevice device)
 {
-	QueueFamilyIndices indices = findQueueFamilies(device);
-	return indices.isComplete();
+	QueueFamilyIndices indices = findQueueFamilies(device); //队列簇支持情况
+	bool extensionsSupported = checkDeviceExtensionSupport(device); //设备扩展支持情况
+	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device); //交换链支持情况
+	return indices.isComplete() && extensionsSupported && swapChainSupport.check();
 }
 
 QueueFamilyIndices Frame::findQueueFamilies(VkPhysicalDevice device)
-{
+{ //因需访问surface 且直接传surface报错 需传整个类 因此添加Frame*参数
 	QueueFamilyIndices indices;
 	uint32_t queueFamilyCount = 0; //获取队列簇
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
@@ -75,4 +85,20 @@ QueueFamilyIndices Frame::findQueueFamilies(VkPhysicalDevice device)
 		i++;
 	}
 	return indices;
+}
+
+bool checkDeviceExtensionSupport(VkPhysicalDevice device)
+{
+	//获取设备扩展列表 
+	uint32_t extensionCount = 0;
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+	//创建匹配列表
+	std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+	for (const auto& extension : availableExtensions)
+	{
+		requiredExtensions.erase(extension.extensionName); //匹配成功则删除
+	}
+	return requiredExtensions.empty(); //如果全部匹配 则全部被删除 返回true
 }

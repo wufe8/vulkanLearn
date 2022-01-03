@@ -19,7 +19,7 @@ void Frame::createInstance() //初始化vulkan
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	createInfo.pApplicationInfo = &appInfo;
 
-	auto extensions = getRequiredExtensions(); //获取并指定vulkan扩展
+	auto extensions = getRequiredInstanceExtensions(); //获取并指定vulkan扩展
 	createInfo.enabledExtensionCount = int(extensions.size());
 	createInfo.ppEnabledExtensionNames = extensions.data();
 
@@ -41,7 +41,8 @@ void Frame::createInstance() //初始化vulkan
 	}
 }
 
-std::vector<const char*> getRequiredExtensions() //获取扩展
+//获取容器扩展
+std::vector<const char*> getRequiredInstanceExtensions()
 {
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions;
@@ -53,4 +54,26 @@ std::vector<const char*> getRequiredExtensions() //获取扩展
 		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME); //启用校验层时添加VK_EXT_debug_utils扩展
 	}
 	return extensions;
+}
+
+//检查可用校验层
+bool checkValidationLayerSupport()
+{
+	uint32_t layerCount;
+	vkEnumerateInstanceLayerProperties(&layerCount, nullptr); //获取所有可用的校验层
+	std::vector<VkLayerProperties> availableLayers(layerCount);
+	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data()); //获取列表
+	for (const char* layerName : validationLayers) {
+		bool layerFound = false;
+		for (const auto& layerProperties : availableLayers) {
+			if (strcmp(layerName, layerProperties.layerName) == 0) {
+				layerFound = true;
+				break;
+			}
+		}
+		if (!layerFound) {
+			return false;
+		}
+	}
+	return true;
 }
