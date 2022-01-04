@@ -317,6 +317,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="F:\Prog\my\vulkan\src\test.cpp" />
+    <ClCompile Include="src\ImageViews.cpp" />
     <ClCompile Include="src\instance.cpp" />
     <ClCompile Include="src\logicalDevice.cpp" />
     <ClCompile Include="src\physicalDevice.cpp" />

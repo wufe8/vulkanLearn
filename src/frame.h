@@ -100,8 +100,9 @@ public:
 	VkSurfaceKHR surface = VK_NULL_HANDLE; //窗口表面抽象
 	VkSwapchainKHR swapChain = VK_NULL_HANDLE; //交换链
 	std::vector<VkImage> swapChainImages = {}; //交换链图像 清除交换链时自动清除
-	VkFormat swapChainImageFormat;
-	VkExtent2D swapChainExtent;
+	VkFormat swapChainImageFormat = {}; //交换链图像格式
+	VkExtent2D swapChainExtent = {}; //交换链图像分辨率
+	std::vector<VkImageView> swapChainImageViews = {}; //图像视图
 	void run()
 	{
 		initWindow(); //初始化窗口
@@ -129,10 +130,13 @@ private:
 	{
 		createInstance();
 		setupDebugMessenger();
+
 		createSurface(); //表面应在选择物理设备前创建
 		pickPhysicalDevice();
 		createLogicalDevice();
 		createSwapChain();
+
+		createImageViews();
 	}
 
 	//创建vulkan容器
@@ -147,6 +151,8 @@ private:
 	void createLogicalDevice();
 	//创建交换链
 	void createSwapChain();
+	//创建图像视图
+	void createImageViews();
 
 	//确定GPU是否合适
 	bool isDeviceSuitable(VkPhysicalDevice device);
@@ -170,6 +176,10 @@ private:
 		if (enableValidationLayers)
 		{
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+		}
+		for (auto imageView : swapChainImageViews)
+		{
+			vkDestroyImageView(device, imageView, nullptr);
 		}
 		vkDestroySwapchainKHR(device, swapChain, nullptr); //删除交换链
 		vkDestroyDevice(device, nullptr); //删除逻辑设备

@@ -25,6 +25,9 @@
     <ClCompile Include="src\windowSurface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImageViews.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="F:\Prog\my\vulkan\src\CMakeLists.txt" />
