@@ -15,6 +15,7 @@
 #include <vector> //vector数据结构
 #include <set> //set数据结构
 #include <algorithm> //数学运算比较
+#include <fstream> //文件处理
 
 const int WIDTH = 800; //定义长宽
 const int HEIGHT = 600;
@@ -44,6 +45,22 @@ void printVkLayerList();
 void printPhysicalDevices(Frame* pFrame);
 //输出设备扩展列表
 void printDeviceExtensionList(Frame* pFrame);
+//读取二进制文件
+static std::vector<char> readFileBinary(const std::string& filename)
+{
+	std::ifstream file(filename, std::ios::ate | std::ios::binary);
+	if (!file.is_open())
+	{
+		throw std::runtime_error("failed to open file!");
+	}
+	//因为从尾部开始读取 因此可由读取位置得知文件大小 方便分配数组空间
+	size_t fileSize = size_t(file.tellg());
+	std::vector<char> buffer(fileSize);
+	file.seekg(0); //跳到文件头
+	file.read(buffer.data(), fileSize);
+	file.close();
+	return buffer;
+}
 
 //检查可用校验层
 bool checkValidationLayerSupport();
@@ -135,8 +152,9 @@ private:
 		pickPhysicalDevice();
 		createLogicalDevice();
 		createSwapChain();
-
 		createImageViews();
+
+		createGraphicsPipelines();
 	}
 
 	//创建vulkan容器
@@ -153,6 +171,8 @@ private:
 	void createSwapChain();
 	//创建图像视图
 	void createImageViews();
+	//创建渲染管线
+	void createGraphicsPipelines();
 
 	//确定GPU是否合适
 	bool isDeviceSuitable(VkPhysicalDevice device);
@@ -160,6 +180,8 @@ private:
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 	//获取设备的交换链支持情况
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+	//创建着色器模块
+	VkShaderModule createShaderModule(const std::vector<char>& code);
 
 	//输出调试列表
 	void printDebug();

@@ -4,29 +4,35 @@
     <ClCompile Include="F:\Prog\my\vulkan\src\test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\instance.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\logicalDevice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\physicalDevice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\swapChain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\tool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\instance.cpp">
+      <Filter>Source Files\setup</Filter>
+    </ClCompile>
+    <ClCompile Include="src\logicalDevice.cpp">
+      <Filter>Source Files\setup</Filter>
+    </ClCompile>
+    <ClCompile Include="src\physicalDevice.cpp">
+      <Filter>Source Files\setup</Filter>
+    </ClCompile>
     <ClCompile Include="src\vulkanDebug.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\setup</Filter>
     </ClCompile>
     <ClCompile Include="src\windowSurface.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\setup</Filter>
     </ClCompile>
-    <ClCompile Include="src\ImageViews.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\imageViews.cpp">
+      <Filter>Source Files\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\swapChain.cpp">
+      <Filter>Source Files\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\shader.cpp">
+      <Filter>Source Files\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphicsPipelines.cpp">
+      <Filter>Source Files\draw</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -36,10 +42,30 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{A59A0754-AB46-37CD-BDE0-15DB6E31181F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\setup">
+      <UniqueIdentifier>{434ea457-1426-468f-96b7-a2007e48f4a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\draw">
+      <UniqueIdentifier>{55c1aa9f-8a8e-4cf0-833c-efa995ab9c0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shaders">
+      <UniqueIdentifier>{c89301ad-e84f-45ae-b124-e239da15985b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\frame.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\shader.frag">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="shaders\shader.vert">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="shaders\compile.bat">
+      <Filter>Source Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
