@@ -93,11 +93,15 @@ public:
 	//GLFWwindow* subwindow;
 	VkInstance instance = {}; //vulkan容器
 	VkDebugUtilsMessengerEXT debugMessenger = {}; //回调函数信息
-	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE; //物理设备
+	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE; //物理设备 无需清除
 	VkDevice device = VK_NULL_HANDLE; //逻辑设备
-	VkQueue graphicsQueue = VK_NULL_HANDLE; //图像队列
-	VkQueue presentQueue = VK_NULL_HANDLE; //呈现队列
+	VkQueue graphicsQueue = VK_NULL_HANDLE; //图像队列 清除逻辑设备时自动清除
+	VkQueue presentQueue = VK_NULL_HANDLE; //呈现队列 清除逻辑设备时自动清除
 	VkSurfaceKHR surface = VK_NULL_HANDLE; //窗口表面抽象
+	VkSwapchainKHR swapChain = VK_NULL_HANDLE; //交换链
+	std::vector<VkImage> swapChainImages = {}; //交换链图像 清除交换链时自动清除
+	VkFormat swapChainImageFormat;
+	VkExtent2D swapChainExtent;
 	void run()
 	{
 		initWindow(); //初始化窗口
@@ -167,6 +171,7 @@ private:
 		{
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
+		vkDestroySwapchainKHR(device, swapChain, nullptr); //删除交换链
 		vkDestroyDevice(device, nullptr); //删除逻辑设备
 		vkDestroySurfaceKHR(instance, surface, nullptr); //删除表面对象
 		vkDestroyInstance(instance, nullptr); //删除vulkan容器
