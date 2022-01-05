@@ -120,6 +120,8 @@ public:
 	VkFormat swapChainImageFormat = {}; //交换链图像格式
 	VkExtent2D swapChainExtent = {}; //交换链图像分辨率
 	std::vector<VkImageView> swapChainImageViews = {}; //图像视图
+	VkPipelineLayout pipelineLayout = {}; //管线布局
+
 	void run()
 	{
 		initWindow(); //初始化窗口
@@ -203,6 +205,7 @@ private:
 		{
 			vkDestroyImageView(device, imageView, nullptr);
 		}
+		vkDestroyPipelineLayout(device, pipelineLayout, nullptr); //删除管线布局
 		vkDestroySwapchainKHR(device, swapChain, nullptr); //删除交换链
 		vkDestroyDevice(device, nullptr); //删除逻辑设备
 		vkDestroySurfaceKHR(instance, surface, nullptr); //删除表面对象

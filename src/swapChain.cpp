@@ -105,10 +105,12 @@ void Frame::createSwapChain()
 	createInfo.presentMode = presentmode;
 	createInfo.imageExtent = extent;
 	createInfo.imageArrayLayers = 1; //指定每个图像包含的层次 通常为1 对VR来说会更多
-	/* VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT 用于颜色附着
+	/* imageUsage 交换链使用方式
+	* VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT 用于颜色附着
 	* VK_IMAGE_USAGE_TRANSFER_DST_BIT 用于传输 */
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; //指定如何操作图像
-	/* VK_SHARING_MODE_EXCLUSIVE 独占模式 一张图像同一时间只能被一个队列簇使用 性能更好
+	/* imageSharingMode 交换链访问模式
+	* VK_SHARING_MODE_EXCLUSIVE 独占模式 一张图像同一时间只能被一个队列簇使用 性能更好
 	* VK_SHARING_MODE_CONCURRENT 协同模式 图像可以在多个队列簇间使用 */
 	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 	uint32_t queueFamilyIndices[] = { uint32_t(indices.graphicsFamily), uint32_t(indices.presentFamily) };
@@ -120,7 +122,7 @@ void Frame::createSwapChain()
 	}
 	else
 	{ //图像队列与呈现队列不同 图像使用协同模式
-		createInfo.imageSharingMode == VK_SHARING_MODE_CONCURRENT;
+		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 		createInfo.queueFamilyIndexCount = 2;
 		createInfo.pQueueFamilyIndices = queueFamilyIndices;
 	}
