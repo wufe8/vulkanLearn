@@ -320,6 +320,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\graphicsPipelines.cpp" />
     <ClCompile Include="src\imageViews.cpp" />
     <ClCompile Include="src\instance.cpp" />
+    <ClCompile Include="src\renderPass.cpp" />
     <ClCompile Include="src\shader.cpp" />
     <ClCompile Include="src\logicalDevice.cpp" />
     <ClCompile Include="src\physicalDevice.cpp" />
