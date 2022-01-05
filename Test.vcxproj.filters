@@ -37,6 +37,9 @@
     <ClCompile Include="src\renderPass.cpp">
       <Filter>Source Files\draw</Filter>
     </ClCompile>
+    <ClCompile Include="src\framebuffer.cpp">
+      <Filter>Source Files\draw</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="F:\Prog\my\vulkan\src\CMakeLists.txt" />

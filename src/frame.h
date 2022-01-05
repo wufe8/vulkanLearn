@@ -122,6 +122,8 @@ public:
 	std::vector<VkImageView> swapChainImageViews = {}; //图像视图
 	VkRenderPass renderPass = {}; //渲染流程
 	VkPipelineLayout pipelineLayout = {}; //管线布局
+	VkPipeline graphicsPipeline = {}; //渲染管线
+	std::vector<VkFramebuffer> swapChainFramebuffers = {}; //帧缓冲
 
 	void run()
 	{
@@ -159,6 +161,7 @@ private:
 
 		createRenderPass();
 		createGraphicsPipelines();
+		createFramebuffers();
 	}
 
 	//创建vulkan容器
@@ -179,6 +182,8 @@ private:
 	void createRenderPass();
 	//创建渲染管线
 	void createGraphicsPipelines();
+	//创建帧缓冲
+	void createFramebuffers();
 
 	//确定GPU是否合适
 	bool isDeviceSuitable(VkPhysicalDevice device);
@@ -209,7 +214,12 @@ private:
 		{
 			vkDestroyImageView(device, imageView, nullptr);
 		}
+		for (auto framebuffer : swapChainFramebuffers)
+		{
+			vkDestroyFramebuffer(device, framebuffer, nullptr);
+		}
 		vkDestroyRenderPass(device, renderPass, nullptr); //删除渲染流程
+		vkDestroyPipeline(device, graphicsPipeline, nullptr);
 		vkDestroyPipelineLayout(device, pipelineLayout, nullptr); //删除管线布局
 		vkDestroySwapchainKHR(device, swapChain, nullptr); //删除交换链
 		vkDestroyDevice(device, nullptr); //删除逻辑设备

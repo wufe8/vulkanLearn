@@ -20,7 +20,7 @@ void Frame::createGraphicsPipelines()
 
 	VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
 	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	fragShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+	fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
 	fragShaderStageInfo.module = fragShaderModule;
 	//指定调用的着色器函数 用于在多个片段着色器中选择需要的
 	fragShaderStageInfo.pName = "main";
@@ -208,6 +208,35 @@ void Frame::createGraphicsPipelines()
 	if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create pipeline layout!");
+	}
+
+	//创建渲染管线
+	VkGraphicsPipelineCreateInfo pipelineInfo = {};
+	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pipelineInfo.stageCount = 2;
+	pipelineInfo.pStages = shaderStages; //着色器
+	pipelineInfo.pVertexInputState = &vertexInputInfo; //顶点输入
+	pipelineInfo.pInputAssemblyState = &inputAssembly; //输入装配
+	pipelineInfo.pViewportState = &viewportState; //视口与裁剪矩形
+	pipelineInfo.pRasterizationState = &rasterizer; //光栅化
+	pipelineInfo.pMultisampleState = &mulitisampling; //多重采样
+	pipelineInfo.pDepthStencilState = nullptr; //深度测试与模板测试
+	pipelineInfo.pColorBlendState = &colorBlending; //颜色混合
+	pipelineInfo.pDynamicState = &dynamicState; //动态状态
+	pipelineInfo.layout = pipelineLayout; //管线布局
+	pipelineInfo.renderPass = renderPass; //渲染流程
+	pipelineInfo.subpass = 0; //图形管线使用的子流程在数组中的索引
+	/* 用于以创建好的图形管线为基础创建新的图形管线
+	* 由同一个管线衍生出的管线之间切换效率也更高 
+	* 只有在flags成员变量使用了 VK_PIPELINE_CREATE_DERIVATIVE_BIT 的情况下才能生效 */
+	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+	pipelineInfo.basePipelineIndex = -1;
+
+	/*支持一次创建多个VkPipeline对象
+	* 第二个参数VkPipelineCache 用于将管线创建数据缓存到多个函数调用中使用乃至存入文件 从而加速之后的管线创建 */
+	if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create graphics pipeline!");
 	}
 
 	vkDestroyShaderModule(device, vertShaderModule, nullptr);
