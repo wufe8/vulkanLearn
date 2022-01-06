@@ -124,6 +124,8 @@ public:
 	VkPipelineLayout pipelineLayout = {}; //管线布局
 	VkPipeline graphicsPipeline = {}; //渲染管线
 	std::vector<VkFramebuffer> swapChainFramebuffers = {}; //帧缓冲
+	VkCommandPool commandPool = {}; //指令池
+	std::vector<VkCommandBuffer> commandBuffers = {}; //指令缓冲
 
 	void run()
 	{
@@ -162,6 +164,8 @@ private:
 		createRenderPass();
 		createGraphicsPipelines();
 		createFramebuffers();
+		createCommandPool();
+		createCommandBuffers();
 	}
 
 	//创建vulkan容器
@@ -184,6 +188,10 @@ private:
 	void createGraphicsPipelines();
 	//创建帧缓冲
 	void createFramebuffers();
+	//创建指令池
+	void createCommandPool();
+	//创建指令缓冲
+	void createCommandBuffers();
 
 	//确定GPU是否合适
 	bool isDeviceSuitable(VkPhysicalDevice device);
@@ -206,23 +214,24 @@ private:
 
 	virtual void cleanup()
 	{
-		if (enableValidationLayers)
+		vkDestroyCommandPool(device, commandPool, nullptr); //删除指令池
+		for (auto framebuffer : swapChainFramebuffers)
 		{
-			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+			vkDestroyFramebuffer(device, framebuffer, nullptr); //删除帧缓冲
 		}
+		vkDestroyPipeline(device, graphicsPipeline, nullptr); //删除渲染管线
+		vkDestroyPipelineLayout(device, pipelineLayout, nullptr); //删除管线布局
+		vkDestroyRenderPass(device, renderPass, nullptr); //删除渲染流程
 		for (auto imageView : swapChainImageViews)
 		{
 			vkDestroyImageView(device, imageView, nullptr);
 		}
-		for (auto framebuffer : swapChainFramebuffers)
-		{
-			vkDestroyFramebuffer(device, framebuffer, nullptr);
-		}
-		vkDestroyRenderPass(device, renderPass, nullptr); //删除渲染流程
-		vkDestroyPipeline(device, graphicsPipeline, nullptr);
-		vkDestroyPipelineLayout(device, pipelineLayout, nullptr); //删除管线布局
 		vkDestroySwapchainKHR(device, swapChain, nullptr); //删除交换链
 		vkDestroyDevice(device, nullptr); //删除逻辑设备
+		if (enableValidationLayers)
+		{
+			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+		}
 		vkDestroySurfaceKHR(instance, surface, nullptr); //删除表面对象
 		vkDestroyInstance(instance, nullptr); //删除vulkan容器
 		glfwDestroyWindow(window); //删除window窗口
