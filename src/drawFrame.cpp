@@ -4,25 +4,40 @@ void Frame::drawFrame()
 {
 	//等待fence发出信号 第四个参数指定等待全部fence(VK_TRUE)还是任一fence(VK_FALSE)
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-	vkResetFences(device, 1, &inFlightFences[currentFrame]); //重置fence为未发出信号的状态
+
 	uint32_t imageIndex;
+
 	/* 从交换链获取一张图像 (交换链是扩展特性 因此与之相关的函数名均带KHR后缀)
 	* 参数:
 	* VkDevice device 逻辑设备对象
-    * VkSwapchainKHR swapchain 要获取图像的交换链
-    * uint64_t timeout 图像获取的超时时间 用无符号64位整型的最大值(UINT64_MAX)表示没有超时时间
-    * VkSemaphore semaphore 图像可用后通知的信号量对象
-    * VkFence fence 图像可用后通知的栅栏对象
-    * uint32_t* pImageIndex 输出可用交换链图像的索引 用以引用 VkImage对象
-
-	* */
-	vkAcquireNextImageKHR(
+	* VkSwapchainKHR swapchain 要获取图像的交换链
+	* uint64_t timeout 图像获取的超时时间 用无符号64位整型的最大值(UINT64_MAX)表示没有超时时间
+	* VkSemaphore semaphore 图像可用后通知的信号量对象
+	* VkFence fence 图像可用后通知的栅栏对象
+	* uint32_t* pImageIndex 输出可用交换链图像的索引 用以引用 VkImage对象
+	* 返回值:
+	* VK_SUCCESS 交换链正常 可以使用
+	* VK_SUBOPTIMAL 交换链仍然可以使用 但表面属性已经不能准确匹配
+	* VK_ERROR_OUT_OF_DATE_KHR 交换链不能继续使用 通常发生在窗口大小改变后 */
+	VkResult result = vkAcquireNextImageKHR(
 		device,
 		swapChain,
 		UINT64_MAX,
 		imageAvailableSemaphore[currentFrame],
 		VK_NULL_HANDLE,
 		&imageIndex);
+	/* 检查是否需要重建交换链(如窗口大小改变)
+	* 可以根据 vkAcquireNextImageKHR 或 vkQueuePresentKHR 函数的返回值判断交换链是否需要重建 */
+	if (result == VK_ERROR_OUT_OF_DATE_KHR)
+	{
+		recreateSwapChain();
+		return;
+	}
+	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+	{
+		throw std::runtime_error("failed to acquire swap chain image!");
+	}
+
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	//VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT  可写入颜色附着的管线阶段
@@ -42,6 +57,7 @@ void Frame::drawFrame()
 	submitInfo.pSignalSemaphores = signalSemaphores;
 	/* 提交指令缓冲给图形指令队列 第二个参数是提交数量(支持同时提交多个) 最后一个参数是指令缓冲执行结束后通知的栅栏对象
 	*/
+	vkResetFences(device, 1, &inFlightFences[currentFrame]); //重置fence为未发出信号的状态
 	if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to submit draw command buffer!");
@@ -63,8 +79,22 @@ void Frame::drawFrame()
 	presentInfo.pImageIndices = &imageIndex;
 	//获取每个交换链的呈现操作是否成功的信息 只有一个交换链时可用直接使用呈现函数的返回值来判断
 	presentInfo.pResults = nullptr;
+	
 	//呈现
-	vkQueuePresentKHR(presentQueue, &presentInfo);
+	//vkQueuePresentKHR(presentQueue, &presentInfo);
+	result = vkQueuePresentKHR(presentQueue, &presentInfo);
+	//if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized)
+	if (framebufferResized)
+	{
+		framebufferResized = false;
+		recreateSwapChain();
+		return;
+	}
+	else if (result != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to acquire swap chain image!");
+	}
+
 	//等待上一次提交的指令结束执行 防止指令堆积(内存泄露) 但会浪费GPU资源
 	//vkQueueWaitIdle(presentQueue);
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT; //用模运算使其在 0 到 MAX_FRAMES_IN_FLIGHT - 1 之间循环

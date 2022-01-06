@@ -105,6 +105,9 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 //校验层调试对象信息设置, 方便vulkan容器设置pNext
 void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 
+//窗口大小改变时应调用该回调函数
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
+
 class Frame //主程序类
 {
 public:
@@ -132,6 +135,7 @@ public:
 	std::vector<VkSemaphore> renderFinishedSemaphore = {}; //信号量--渲染完成
 	std::vector<VkFence> inFlightFences = {}; //CPU和GPU的同步 防止超过MAX_FRAMES_IN_FLIGHT帧的指令同时被提交执行
 	size_t currentFrame = 0; //当前渲染的帧 用来选择当前帧应该使用的信号量
+	bool framebufferResized = false; //标记帧缓冲(窗口)大小是否已经改变
 
 	void run()
 	{
@@ -146,14 +150,19 @@ public:
 		window = nullptr;
 	}
 
+	//输出调试列表
+	void printDebug();
+
 private:
 	virtual void initWindow()
 	{
 		glfwInit(); //初始化glfw
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); //阻止glfw调用OpenGL(默认情况)
-		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); //禁止调整窗口大小
+		//glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); //禁止调整窗口大小
 		window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr); //创建窗口 并获取地址
 		//subwindow = glfwCreateWindow(WIDTH - 200, HEIGHT - 200, "subwindow", nullptr, nullptr);
+		glfwSetWindowUserPointer(window, this);
+		glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 	}
 
 	virtual void initVulkan()
@@ -187,6 +196,12 @@ private:
 	void createLogicalDevice();
 	//创建交换链
 	void createSwapChain();
+	//选择交换范围(交换链中图像的分辨率) 需要获取窗口对象以在重建时适应窗口尺寸的变化
+	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR capabilities);
+	//清除交换链相关对象 为重建交换链做准备
+	void cleanupSwapChain();
+	//重建交换链 应对如窗口大小改变等交换链与窗口不再匹配的情况
+	void recreateSwapChain();
 	//创建图像视图
 	void createImageViews();
 	//创建渲染VK_SUBPASS_EXTERNAL即子流程执行前后操作(这个隐含的子流程)流程
@@ -211,8 +226,6 @@ private:
 	//创建着色器模块
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 
-	//输出调试列表
-	void printDebug();
 	virtual void mainLoop()
 	{
 		while (!glfwWindowShouldClose(window)) //循环直到点击关闭window窗口
@@ -236,35 +249,31 @@ private:
 
 	virtual void cleanup()
 	{
+		cleanupSwapChain(); //清除交换链相关对象(交换链, 图像视图, 渲染流程, 管线布局, 渲染管线, 帧缓冲)
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			vkDestroySemaphore(device, renderFinishedSemaphore[i], nullptr); //删除信号量
+			vkDestroySemaphore(device, renderFinishedSemaphore[i], nullptr); //清除信号量
 			vkDestroySemaphore(device, imageAvailableSemaphore[i], nullptr);
 			vkDestroyFence(device, inFlightFences[i], nullptr);
 		}
-		vkDestroyCommandPool(device, commandPool, nullptr); //删除指令池
-		for (auto framebuffer : swapChainFramebuffers)
-		{
-			vkDestroyFramebuffer(device, framebuffer, nullptr); //删除帧缓冲
-		}
-		vkDestroyPipeline(device, graphicsPipeline, nullptr); //删除渲染管线
-		vkDestroyPipelineLayout(device, pipelineLayout, nullptr); //删除管线布局
-		vkDestroyRenderPass(device, renderPass, nullptr); //删除渲染流程
-		for (auto imageView : swapChainImageViews)
-		{
-			vkDestroyImageView(device, imageView, nullptr);
-		}
-		vkDestroySwapchainKHR(device, swapChain, nullptr); //删除交换链
-		vkDestroyDevice(device, nullptr); //删除逻辑设备
+		vkDestroyCommandPool(device, commandPool, nullptr); //清除指令池
+		vkDestroyDevice(device, nullptr); //清除逻辑设备
 		if (enableValidationLayers)
 		{
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
-		vkDestroySurfaceKHR(instance, surface, nullptr); //删除表面对象
-		vkDestroyInstance(instance, nullptr); //删除vulkan容器
-		glfwDestroyWindow(window); //删除window窗口
-		glfwTerminate(); //删除所有剩余资源
+		vkDestroySurfaceKHR(instance, surface, nullptr); //清除表面对象
+		vkDestroyInstance(instance, nullptr); //清除vulkan容器
+		glfwDestroyWindow(window); //清除window窗口
+		glfwTerminate(); //清除所有剩余资源
 	}
 };
+
+//窗口大小改变时应调用该回调函数
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height)
+{
+	auto frame = reinterpret_cast<Frame*>(glfwGetWindowUserPointer(window));
+	frame->framebufferResized = true;
+}
 
 #endif

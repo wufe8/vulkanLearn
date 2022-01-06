@@ -58,8 +58,8 @@ VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& avai
 	return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-//选择交换范围(交换链中图像的分辨率)
-VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR capabilities)
+//选择交换范围(交换链中图像的分辨率) 需要获取窗口对象以在重建时适应窗口尺寸的变化
+VkExtent2D Frame::chooseSwapExtent(const VkSurfaceCapabilitiesKHR capabilities)
 {
 	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
 	{
@@ -67,7 +67,9 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR capabilities)
 	}
 	else
 	{
-		VkExtent2D actualExtent = { WIDTH, HEIGHT };
+		int width = 0, height = 0;
+		glfwGetFramebufferSize(window, &width, &height);
+		VkExtent2D actualExtent = { uint32_t(width), uint32_t(height) };
 		actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
 		actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
 		//确保不会比最小值小 不会比最大值大
@@ -144,4 +146,43 @@ void Frame::createSwapChain()
 	vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
 	swapChainImageFormat = surfaceFormat.format;
 	swapChainExtent = extent;
+}
+
+//清除交换链相关对象 为重建交换链做准备
+void Frame::cleanupSwapChain()
+{
+	for (auto framebuffer : swapChainFramebuffers)
+	{
+		vkDestroyFramebuffer(device, framebuffer, nullptr); //清除帧缓冲
+	}
+	vkFreeCommandBuffers(device, commandPool, uint32_t(commandBuffers.size()), commandBuffers.data()); //指令池对象只需要清除分配的指令缓冲对象
+	vkDestroyPipeline(device, graphicsPipeline, nullptr); //清除渲染管线
+	vkDestroyPipelineLayout(device, pipelineLayout, nullptr); //清除管线布局
+	vkDestroyRenderPass(device, renderPass, nullptr); //清除渲染流程
+	for (auto imageView : swapChainImageViews)
+	{
+		vkDestroyImageView(device, imageView, nullptr); //清除图像视图
+	}
+	vkDestroySwapchainKHR(device, swapChain, nullptr); //清除交换链
+}
+
+//重建交换链 应对如窗口大小改变等交换链与窗口不再匹配的情况
+void Frame::recreateSwapChain()
+{
+	//窗口最小化时停止渲染 直到窗口重新可见
+	int width = 0, height = 0;
+	while (width == 0 || height == 0)
+	{
+		glfwGetFramebufferSize(window, &width, &height);
+		glfwWaitEvents();
+	}
+	vkDeviceWaitIdle(device); //防止在对象的使用过程中将其清除创建
+	cleanupSwapChain(); //重建前先清理
+
+	createSwapChain(); //重建交换链
+	createImageViews(); //图形视图直接依赖于交换链图像
+	createRenderPass(); //渲染流程依赖于交换链图像的格式
+	createGraphicsPipelines(); //视口和裁剪矩形在管线创建时被指定(但也可动态修改 重建不是必须)
+	createFramebuffers(); //帧缓冲直接依赖于交换链图像
+	createCommandBuffers(); //指令缓冲直接依赖于交换链图像
 }
