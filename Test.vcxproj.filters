@@ -43,6 +43,12 @@
     <ClCompile Include="src\commandPool.cpp">
       <Filter>Source Files\draw</Filter>
     </ClCompile>
+    <ClCompile Include="src\drawFrame.cpp">
+      <Filter>Source Files\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\semaphores.cpp">
+      <Filter>Source Files\draw</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="F:\Prog\my\vulkan\src\CMakeLists.txt" />

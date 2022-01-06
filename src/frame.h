@@ -126,6 +126,8 @@ public:
 	std::vector<VkFramebuffer> swapChainFramebuffers = {}; //帧缓冲
 	VkCommandPool commandPool = {}; //指令池
 	std::vector<VkCommandBuffer> commandBuffers = {}; //指令缓冲
+	VkSemaphore imageAvailableSemaphore; //信号量--图像已获取
+	VkSemaphore renderFinishedSemaphore; //信号量--渲染完成
 
 	void run()
 	{
@@ -166,6 +168,7 @@ private:
 		createFramebuffers();
 		createCommandPool();
 		createCommandBuffers();
+		createSemaphores();
 	}
 
 	//创建vulkan容器
@@ -182,7 +185,7 @@ private:
 	void createSwapChain();
 	//创建图像视图
 	void createImageViews();
-	//创建渲染流程
+	//创建渲染VK_SUBPASS_EXTERNAL即子流程执行前后操作(这个隐含的子流程)流程
 	void createRenderPass();
 	//创建渲染管线
 	void createGraphicsPipelines();
@@ -192,6 +195,8 @@ private:
 	void createCommandPool();
 	//创建指令缓冲
 	void createCommandBuffers();
+	//创建信号量
+	void createSemaphores();
 
 	//确定GPU是否合适
 	bool isDeviceSuitable(VkPhysicalDevice device);
@@ -209,11 +214,26 @@ private:
 		while (!glfwWindowShouldClose(window)) //循环直到点击关闭window窗口
 		{
 			glfwPollEvents(); //推送事件处理
+			drawFrame(); //绘制图像
 		}
+		vkDeviceWaitIdle(device); //等待设备绘制完成 避免与后续清除操作冲突
 	}
+
+	/* 绘制图像
+	* 1. 从交换链获取一张图像
+	* 2. 对帧缓冲附着执行指令缓冲中的渲染指令
+	* 3. 返回渲染后的图像到交换链进行呈现操作
+	* 实际执行均为异步操作 可通过栅栏(fence)或信号量(semaphore)进行同步
+	* 可用 vkWaitForFences 函数查询fence状态 但无法查询semaphore状态
+	* 通常用fence对应用程序本身和渲染操作进行同步
+	* 用semaphore对一个指令队列内的操作或多个不同指令队列的操作进行同步
+	* */
+	void drawFrame(); 
 
 	virtual void cleanup()
 	{
+		vkDestroySemaphore(device, renderFinishedSemaphore, nullptr); //删除信号量
+		vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
 		vkDestroyCommandPool(device, commandPool, nullptr); //删除指令池
 		for (auto framebuffer : swapChainFramebuffers)
 		{

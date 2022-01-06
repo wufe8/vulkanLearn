@@ -51,6 +51,30 @@ void Frame::createRenderPass()
 	renderPassInfo.pAttachments = &colorAttachment;
 	renderPassInfo.subpassCount = 1;
 	renderPassInfo.pSubpasses = &subpass;
+
+	//子流程依赖
+	VkSubpassDependency dependency = {};
+	/* 渲染流程开始前的子流程
+	* 0 即被依赖的子流程的索引 VK_SUBPASS_EXTERNAL 即子流程执行前后操作(这个隐含的子流程) */ 
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	//渲染流程结束后的子流程 填入值同srcAccessMask 为避免循环依赖 dstSubpass必须始终大于srcSubpass
+	dependency.dstSubpass = 0;
+	//渲染流程开始前的子流程需要等待的管线阶段
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	/* 渲染流程开始前的子流程将进行的操作类型 0即无法操作
+	* VK_ACCESS_COLOR_ATTACHMENT_READ_BIT 可对颜色附着进行读取
+	* VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT 可对颜色附着进行写入 */
+	dependency.srcAccessMask = 0;
+	//渲染流程结束后的子流程需要等待的管线阶段
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	/* 渲染流程结束后的子流程将进行的操作类型 填入值同srcAccessMask */
+	dependency.dstAccessMask =
+		VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
+		VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	//指定渲染流程使用的依赖信息
+	renderPassInfo.dependencyCount = 1;
+	renderPassInfo.pDependencies = &dependency;
+
 	if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create render pass!");

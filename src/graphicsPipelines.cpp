@@ -197,7 +197,7 @@ void Frame::createGraphicsPipelines()
 	};
 	VkPipelineDynamicStateCreateInfo dynamicState = {};
 	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-	dynamicState.dynamicStateCount = dynamicStates.size();
+	dynamicState.dynamicStateCount = uint32_t(dynamicStates.size());
 	dynamicState.pDynamicStates = dynamicStates.data();
 	
 	//管线布局可在着色器中使用uniform变量 动态地进行修改 实现着色器的动态配置
