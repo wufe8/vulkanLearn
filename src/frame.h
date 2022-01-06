@@ -20,6 +20,8 @@
 const int WIDTH = 800; //定义长宽
 const int HEIGHT = 600;
 
+const int MAX_FRAMES_IN_FLIGHT = 2; //可同时并行处理的帧数
+
 const std::vector<const char*> validationLayers = {
 	"VK_LAYER_KHRONOS_validation" //隐式开启所有可用校验层
 };
@@ -126,8 +128,10 @@ public:
 	std::vector<VkFramebuffer> swapChainFramebuffers = {}; //帧缓冲
 	VkCommandPool commandPool = {}; //指令池
 	std::vector<VkCommandBuffer> commandBuffers = {}; //指令缓冲
-	VkSemaphore imageAvailableSemaphore; //信号量--图像已获取
-	VkSemaphore renderFinishedSemaphore; //信号量--渲染完成
+	std::vector<VkSemaphore> imageAvailableSemaphore = {}; //信号量--图像已获取
+	std::vector<VkSemaphore> renderFinishedSemaphore = {}; //信号量--渲染完成
+	std::vector<VkFence> inFlightFences = {}; //CPU和GPU的同步 防止超过MAX_FRAMES_IN_FLIGHT帧的指令同时被提交执行
+	size_t currentFrame = 0; //当前渲染的帧 用来选择当前帧应该使用的信号量
 
 	void run()
 	{
@@ -168,7 +172,7 @@ private:
 		createFramebuffers();
 		createCommandPool();
 		createCommandBuffers();
-		createSemaphores();
+		createSyncObjects();
 	}
 
 	//创建vulkan容器
@@ -196,7 +200,7 @@ private:
 	//创建指令缓冲
 	void createCommandBuffers();
 	//创建信号量
-	void createSemaphores();
+	void createSyncObjects();
 
 	//确定GPU是否合适
 	bool isDeviceSuitable(VkPhysicalDevice device);
@@ -232,8 +236,12 @@ private:
 
 	virtual void cleanup()
 	{
-		vkDestroySemaphore(device, renderFinishedSemaphore, nullptr); //删除信号量
-		vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			vkDestroySemaphore(device, renderFinishedSemaphore[i], nullptr); //删除信号量
+			vkDestroySemaphore(device, imageAvailableSemaphore[i], nullptr);
+			vkDestroyFence(device, inFlightFences[i], nullptr);
+		}
 		vkDestroyCommandPool(device, commandPool, nullptr); //删除指令池
 		for (auto framebuffer : swapChainFramebuffers)
 		{
