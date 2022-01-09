@@ -14,6 +14,7 @@
 #include <functional> //functional用于资源管理
 #include <cstdlib> //cstdlib使用EXIT_SUCESS, EXIT_FAILURE宏
 #include <vector> //vector数据结构
+#include <array> //array数据结构
 #include <set> //set数据结构
 #include <algorithm> //数学运算比较
 #include <fstream> //文件处理
@@ -113,6 +114,47 @@ static void framebufferResizeCallback(GLFWwindow* window, int width, int height)
 struct Vertex {
 	glm::vec2 pos;
 	glm::vec3 color;
+
+	//获取顶点信息
+	static VkVertexInputBindingDescription getBindingDescription()
+	{
+		VkVertexInputBindingDescription bindingDescription{};
+		//绑定数组中绑定的索引
+		bindingDescription.binding = 0;
+		//一个条目到下一个条目的字节数
+		bindingDescription.stride = sizeof(Vertex);
+		/* 遍历方式
+		* VK_VERTEX_INPUT_RATE_VERTEX 每次移动到顶点后的下一个数据条目
+		* VK_VERTEX_INPUT_RATE_VERTEX 每次移动到容器后的下一个数据条目 */
+		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+		return bindingDescription;
+	}
+
+	//获取属性信息
+	static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions()
+	{
+		std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions = {};
+		//描述位置
+		attributeDescriptions[0].binding = 0;
+		attributeDescriptions[0].location = 0;
+		/* 数据类型(均用类似颜色的名字) 隐式定义了属性数据的字节大小 对于着色器类型:
+		* float VK_FORMAT_R32_SFLOAT
+		* vec2 VK_FORMAT_R32G32_SFLOAT
+		* vec3 VK_FORMAT_R32G32B32_SFLOAT
+		* vec4 VK_FORMAT_R32G32B32A32_SFLOAT
+		* 另有以下变种:
+		* ivec2 VK_FORMAT_R32G32_SINT 2个分量的32位有符号整型向量
+		* uvec4 VK_FORMAT_R32G32B32A32_UINT 4个分量的32位无符号整型向量
+		* double VK_FORMAT_R64_SFLOAT 双精度浮点 */
+		attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+		attributeDescriptions[0].offset = offsetof(Vertex, pos);
+		//描述颜色
+		attributeDescriptions[1].binding = 0;
+		attributeDescriptions[1].location = 1;
+		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[1].offset = offsetof(Vertex, color);
+		return attributeDescriptions;
+	}
 };
 
 class Frame //主程序类
@@ -149,7 +191,7 @@ public:
 
 	const std::vector<Vertex> vertices =
 	{
-		{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
 		{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
 		{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
 	};
