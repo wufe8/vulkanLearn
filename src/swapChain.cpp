@@ -185,4 +185,6 @@ void Frame::recreateSwapChain()
 	createGraphicsPipelines(); //视口和裁剪矩形在管线创建时被指定(但也可动态修改 重建不是必须)
 	createFramebuffers(); //帧缓冲直接依赖于交换链图像
 	createCommandBuffers(); //指令缓冲直接依赖于交换链图像
+
+	imagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE); //交换链图像数可能有变
 }

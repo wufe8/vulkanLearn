@@ -317,7 +317,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="F:\Prog\my\vulkan\src\test.cpp" />
-    <ClCompile Include="src\commandPool.cpp" />
+    <ClCompile Include="src\commandBuffer.cpp" />
     <ClCompile Include="src\drawFrame.cpp" />
     <ClCompile Include="src\framebuffer.cpp" />
     <ClCompile Include="src\graphicsPipelines.cpp" />
@@ -330,6 +330,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="src\physicalDevice.cpp" />
     <ClCompile Include="src\swapChain.cpp" />
     <ClCompile Include="src\tool.cpp" />
+    <ClCompile Include="src\vertex.cpp" />
     <ClCompile Include="src\vulkanDebug.cpp" />
     <ClCompile Include="src\windowSurface.cpp" />
   </ItemGroup>

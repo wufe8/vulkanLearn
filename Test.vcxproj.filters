@@ -40,13 +40,16 @@
     <ClCompile Include="src\framebuffer.cpp">
       <Filter>Source Files\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\commandPool.cpp">
+    <ClCompile Include="src\commandBuffer.cpp">
       <Filter>Source Files\draw</Filter>
     </ClCompile>
     <ClCompile Include="src\drawFrame.cpp">
       <Filter>Source Files\draw</Filter>
     </ClCompile>
     <ClCompile Include="src\syncObjects.cpp">
+      <Filter>Source Files\draw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\vertex.cpp">
       <Filter>Source Files\draw</Filter>
     </ClCompile>
   </ItemGroup>

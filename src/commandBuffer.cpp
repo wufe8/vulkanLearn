@@ -70,6 +70,10 @@ void Frame::createCommandBuffers()
 		vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 		//绑定图形管线 第二个参数用于指定管线对象是图形管线还是计算管线
 		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+		VkBuffer vertexBuffers[] = { vertexBuffer };
+		VkDeviceSize offsets[] = { 0 };
+		//绑定顶点缓冲 第二个参数为内存偏移值 第三个为顶点缓冲的数量 倒数第二个为需要绑定的顶点缓冲数组 最后一个为顶点数据在顶点缓冲中的偏移值数组
+		vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
 		/* 绘制操作
 		* 参数:
 		* VkCommandBuffer commandBuffer 记录有要执行的指令的指令缓冲对象
@@ -78,7 +82,7 @@ void Frame::createCommandBuffers()
 		* uint32_t firstVertex 定义着色器变量 gl_VertexIndex 的值
 		* uint32_t firstInstance 定义着色器变量 gl_InstanceIndex 的值
 		*/
-		vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+		vkCmdDraw(commandBuffers[i], uint32_t(vertices.size()), 1, 0, 0);
 		vkCmdEndRenderPass(commandBuffers[i]);
 		if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
 		{

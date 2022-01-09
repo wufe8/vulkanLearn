@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h> //glfw用于创建窗口
 //#define GLFW_EXPOSE_NATIVE_WIN32 //使用windows平台原生功能
 //#include <GLFW/glfw3native.h> //使用平台原生
+#include <glm/glm.hpp>
 
 #include <iostream> //iostream用于控制台输出
 #include <stdexcept> //stdexcept支持多种错误类型的处理
@@ -108,6 +109,12 @@ void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create
 //窗口大小改变时应调用该回调函数
 static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 
+//交叉顶点属性(顶点位置与顶点颜色数据定义在同一个结构体数组中)
+struct Vertex {
+	glm::vec2 pos;
+	glm::vec3 color;
+};
+
 class Frame //主程序类
 {
 public:
@@ -131,11 +138,21 @@ public:
 	std::vector<VkFramebuffer> swapChainFramebuffers = {}; //帧缓冲
 	VkCommandPool commandPool = {}; //指令池
 	std::vector<VkCommandBuffer> commandBuffers = {}; //指令缓冲
-	std::vector<VkSemaphore> imageAvailableSemaphore = {}; //信号量--图像已获取
-	std::vector<VkSemaphore> renderFinishedSemaphore = {}; //信号量--渲染完成
+	std::vector<VkSemaphore> imageAvailableSemaphores = {}; //信号量--图像已获取
+	std::vector<VkSemaphore> renderFinishedSemaphores = {}; //信号量--渲染完成
 	std::vector<VkFence> inFlightFences = {}; //CPU和GPU的同步 防止超过MAX_FRAMES_IN_FLIGHT帧的指令同时被提交执行
+	std::vector<VkFence> imagesInFlight = {}; //跟踪交换链图像是否有正在使用的帧
 	size_t currentFrame = 0; //当前渲染的帧 用来选择当前帧应该使用的信号量
 	bool framebufferResized = false; //标记帧缓冲(窗口)大小是否已经改变
+	VkBuffer vertexBuffer; //顶点缓冲
+	VkDeviceMemory vertexBufferMemory; //顶点缓冲内存空间
+
+	const std::vector<Vertex> vertices =
+	{
+		{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+	};
 
 	void run()
 	{
@@ -162,7 +179,7 @@ private:
 		window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr); //创建窗口 并获取地址
 		//subwindow = glfwCreateWindow(WIDTH - 200, HEIGHT - 200, "subwindow", nullptr, nullptr);
 		glfwSetWindowUserPointer(window, this);
-		glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+		glfwSetFramebufferSizeCallback(window, framebufferResizeCallback); //绑定改变窗口尺寸时的回调函数
 	}
 
 	virtual void initVulkan()
@@ -180,6 +197,7 @@ private:
 		createGraphicsPipelines();
 		createFramebuffers();
 		createCommandPool();
+		createVertexBuffer();
 		createCommandBuffers();
 		createSyncObjects();
 	}
@@ -212,6 +230,8 @@ private:
 	void createFramebuffers();
 	//创建指令池
 	void createCommandPool();
+	//创建顶点缓冲
+	void createVertexBuffer();
 	//创建指令缓冲
 	void createCommandBuffers();
 	//创建信号量
@@ -225,6 +245,8 @@ private:
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 	//创建着色器模块
 	VkShaderModule createShaderModule(const std::vector<char>& code);
+	//查找最合适的内存类型
+	uint32_t Frame::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 	virtual void mainLoop()
 	{
@@ -250,12 +272,19 @@ private:
 	virtual void cleanup()
 	{
 		cleanupSwapChain(); //清除交换链相关对象(交换链, 图像视图, 渲染流程, 管线布局, 渲染管线, 帧缓冲)
+		vkDestroyBuffer(device, vertexBuffer, nullptr); //清除顶点缓冲
+		vkFreeMemory(device, vertexBufferMemory, nullptr);
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			vkDestroySemaphore(device, renderFinishedSemaphore[i], nullptr); //清除信号量
-			vkDestroySemaphore(device, imageAvailableSemaphore[i], nullptr);
+			vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr); //清除信号量
+			vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
 			vkDestroyFence(device, inFlightFences[i], nullptr);
 		}
+		//不清除报错未清除 清除报错报错fence使用中 暂时无法解决
+		//for (size_t i = 0; i < imagesInFlight.size(); i++)
+		//{
+		//	vkDestroyFence(device, imagesInFlight[i], nullptr);
+		//}
 		vkDestroyCommandPool(device, commandPool, nullptr); //清除指令池
 		vkDestroyDevice(device, nullptr); //清除逻辑设备
 		if (enableValidationLayers)
