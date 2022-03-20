@@ -28,14 +28,13 @@ void printVkLayerList()
 	std::cout << std::endl;
 }
 
-/* TODO 输出物理设备
-* @param instance vulkan容器 */
-void printPhysicalDevices(Frame* pFrame)
+//输出物理设备 使用单独函数进行传参会导致读取报错 必须为类成员
+void Frame::printPhysicalDevices()
 {
 	uint32_t deviceCount = 0;
-	vkEnumeratePhysicalDevices(pFrame->instance, &deviceCount, nullptr);
+	vkEnumeratePhysicalDevices(this->instance, &deviceCount, nullptr);
 	std::vector<VkPhysicalDevice> devices(deviceCount);
-	vkEnumeratePhysicalDevices(pFrame->instance, &deviceCount, devices.data());
+	vkEnumeratePhysicalDevices(this->instance, &deviceCount, devices.data());
 	std::vector<VkPhysicalDeviceProperties> devicesProperties(deviceCount);
 	std::vector<VkPhysicalDeviceFeatures> devicesFeatures(deviceCount);
 	std::cout << "GPUs info:" << std::endl;
@@ -52,13 +51,13 @@ void printPhysicalDevices(Frame* pFrame)
 	std::cout << std::endl;
 }
 
-//输出设备扩展列表
-void printDeviceExtensionList(Frame* pFrame)
+//输出设备扩展列表 使用单独函数进行传参会导致读取报错 必须为类成员
+void Frame::printDeviceExtensionList()
 {
 	uint32_t count = 0;
-	vkEnumerateDeviceExtensionProperties(pFrame->physicalDevice, nullptr, &count, nullptr); //获取数量
+	vkEnumerateDeviceExtensionProperties(this->physicalDevice, nullptr, &count, nullptr); //获取数量
 	std::vector<VkExtensionProperties> units(count);
-	vkEnumerateDeviceExtensionProperties(pFrame->physicalDevice, nullptr, &count, units.data()); //获取列表
+	vkEnumerateDeviceExtensionProperties(this->physicalDevice, nullptr, &count, units.data()); //获取列表
 	std::cout << "available device extensions:" << std::endl;
 	for (const auto& unit : units) {
 		std::cout << "\t" << unit.extensionName << std::endl;
@@ -70,7 +69,7 @@ void Frame::printDebug()
 {
 	printVkExtensionList();
 	printVkLayerList();
-	printPhysicalDevices(this);
-	printDeviceExtensionList(this);
+	printPhysicalDevices();
+	printDeviceExtensionList();
 
 }

@@ -44,11 +44,7 @@ class Frame;
 void printVkExtensionList();
 //输出可用校验层列表
 void printVkLayerList();
-/* TODO 输出物理设备
-* @param instance vulkan容器 */
-void printPhysicalDevices(Frame* pFrame);
-//输出设备扩展列表
-void printDeviceExtensionList(Frame* pFrame);
+
 //读取二进制文件
 static std::vector<char> readFileBinary(const std::string& filename)
 {
@@ -209,6 +205,10 @@ public:
 		window = nullptr;
 	}
 
+	//输出物理设备 使用单独函数进行传参会导致读取报错 必须为类成员
+	void Frame::printPhysicalDevices();
+	//输出设备扩展列表 使用单独函数进行传参会导致读取报错 必须为类成员
+	void Frame::printDeviceExtensionList();
 	//输出调试列表
 	void printDebug();
 
